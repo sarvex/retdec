@@ -51,13 +51,10 @@ def parse_all_structs(content, file):
             sname = struct_info.type_name_text
 
         if sname:
-            if sname in structs.keys():
+            if sname in structs:
                 logging.warning(
-                    'Duplicit struct: {}\nFile: {}\n{}\nFirst '
-                    'struct was:\nFile: {}\n{}\n'
-                    ''.format(
-                        sname, struct_info.header_text, struct_info.members_list,
-                        structs[sname].header_text, structs[sname].members_list))
+                    f'Duplicit struct: {sname}\nFile: {struct_info.header_text}\n{struct_info.members_list}\nFirst struct was:\nFile: {structs[sname].header_text}\n{structs[sname].members_list}\n'
+                )
             else:
                 structs[sname] = struct_info
     return structs, content
@@ -77,13 +74,10 @@ def parse_all_unions(content, file):
             uname = union_info.type_name_text
 
         if uname:
-            if uname in unions.keys():
+            if uname in unions:
                 logging.warning(
-                    'Duplicit union: {}\nFile: {}\n{}\nFirst '
-                    'union was:\nFile: {}\n{}\n'
-                    ''.format(
-                        uname, union_info.header_text, union_info.members_list,
-                        unions[uname].header_text, unions[uname].members_list))
+                    f'Duplicit union: {uname}\nFile: {union_info.header_text}\n{union_info.members_list}\nFirst union was:\nFile: {unions[uname].header_text}\n{unions[uname].members_list}\n'
+                )
             else:
                 unions[uname] = union_info
     return unions, content
@@ -112,13 +106,10 @@ def parse_all_functions(content, output, file):
                 params_list.append(Param('vararg', '...'))
             finfo = FuncInfo(decl, name, file, ret, params_list, varargs, call_conv)
             finfo.delete_underscores_in_param_names()
-            if name in functions.keys():
+            if name in functions:
                 logging.warning(
-                    'Duplicit declaration: {}\nFile: {}\n{}\nFirst '
-                    'declaration was:\nFile: {}\n{}\n'
-                    ''.format(
-                        name, finfo.header, finfo.decl,
-                        functions[name].header, functions[name].decl))
+                    f'Duplicit declaration: {name}\nFile: {finfo.header}\n{finfo.decl}\nFirst declaration was:\nFile: {functions[name].header}\n{functions[name].decl}\n'
+                )
             else:
                 functions[name] = finfo
     return functions
@@ -152,6 +143,7 @@ def is_wanted(func_info):
             'TCHAR',
         ]))
         return re.search(t_types_re, type) is not None
+
     if is_t_type(func_info.ret_type):
         return False
     for param in func_info.params:
@@ -161,10 +153,7 @@ def is_wanted(func_info):
     # Some functions look like declarations but are, in fact, just ordinary
     # sentences. We detect this heuristically by searching for declarations
     # that start with an uppercase letter and contain "the".
-    if re.fullmatch(r'[A-Z].*\bthe\b.*', func_info.decl):
-        return False
-
-    return True
+    return not re.fullmatch(r'[A-Z].*\bthe\b.*', func_info.decl)
 
 
 def wrong_func_parameters(params):
@@ -192,10 +181,8 @@ def parse_typedefs(text):
         to_parse.append(t_defs[0])
         if len(t_defs) > 1:
             t_type = re.search(r'^([\w\s]+)?(?=\s+(?:\*|\w+|\(\*))', t_defs[0])
-            t_type = t_type.group(1) if t_type else ''
-            for next_type in t_defs[1:]:
-                to_parse.append(t_type + ' ' + next_type)
-
+            t_type = t_type[1] if t_type else ''
+            to_parse.extend(f'{t_type} {next_type}' for next_type in t_defs[1:])
     parsed = []
     for t_def in to_parse:
         if t_def.endswith(')'):

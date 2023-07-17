@@ -62,8 +62,7 @@ class TypesTests(unittest.TestCase):
         prim = PrimitiveType('int')
 
         self.assertEqual(
-            PointerType(prim).__repr__(),
-            "PointerType('{}')".format(prim.type_hash)
+            PointerType(prim).__repr__(), f"PointerType('{prim.type_hash}')"
         )
 
     def test_typedefed_name_text_returns_correct_string(self):
@@ -78,7 +77,7 @@ class TypesTests(unittest.TestCase):
 
         self.assertEqual(
             QualifierType('const', prim).__repr__(),
-            "QualifierType('qualifier' 'const' '{}')".format(prim.type_hash)
+            f"QualifierType('qualifier' 'const' '{prim.type_hash}')",
         )
 
     def test_struct_type_correct_string_repr(self):
@@ -91,15 +90,13 @@ class TypesTests(unittest.TestCase):
         ptr = PointerType(PrimitiveType('int'))
 
         self.assertEqual(
-            FunctionType(ptr).__repr__(),
-            "FunctionType('{}', [])".format(ptr.type_hash)
+            FunctionType(ptr).__repr__(), f"FunctionType('{ptr.type_hash}', [])"
         )
 
     def test_array_type_correct_string_repr(self):
         prim = PrimitiveType('int')
         self.assertEqual(
-            ArrayType(prim).__repr__(),
-            "ArrayType('{}', [])".format(prim.type_hash)
+            ArrayType(prim).__repr__(), f"ArrayType('{prim.type_hash}', [])"
         )
 
     def test_enum_type_correct_string_repr(self):

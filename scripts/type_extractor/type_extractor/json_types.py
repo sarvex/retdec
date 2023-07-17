@@ -135,7 +135,7 @@ class VoidType(BaseType):
         return hash_function(self.type)
 
     def __repr__(self):
-        return '{}'.format(self.__class__.__name__)
+        return f'{self.__class__.__name__}'
 
 
 class PointerType(BaseType):
@@ -177,7 +177,7 @@ class TypedefedType(BaseType):
 
     @property
     def known_typedefed_type(self):
-        return True if type(self.typedefed_type) != str else False
+        return type(self.typedefed_type) != str
 
     def __repr__(self):
         return '{}({!r}, {!r})'.format(
@@ -190,10 +190,7 @@ class QualifierType(BaseType):
     def __init__(self, name='', modified_type=None):
         self.type = TYPES.QUALIFIER.value
         self.name = name
-        if modified_type is not None:
-            self.modified_type = modified_type.type_hash
-        else:
-            self.modified_type = ''
+        self.modified_type = '' if modified_type is None else modified_type.type_hash
 
     @property
     def type_hash(self):
@@ -209,7 +206,7 @@ class StructType(BaseType):
 
     def __init__(self, name='', members=None):
         self.type = TYPES.STRUCT.value
-        self.name = 'struct ' + name
+        self.name = f'struct {name}'
         self.members = members if members is not None else []
 
     @property
@@ -218,7 +215,7 @@ class StructType(BaseType):
 
     @property
     def has_members(self):
-        return True if self.members else False
+        return bool(self.members)
 
     def __repr__(self):
         return '{}({!r}, {!r})'.format(
@@ -230,7 +227,7 @@ class UnionType(BaseType):
 
     def __init__(self, name='', members=None):
         self.type = TYPES.UNION.value
-        self.name = 'union ' + name
+        self.name = f'union {name}'
         self.members = members if members is not None else []
 
     @property
@@ -239,7 +236,7 @@ class UnionType(BaseType):
 
     @property
     def has_members(self):
-        return True if self.members else False
+        return bool(self.members)
 
     def __repr__(self):
         return '{}({!r}, {!r})'.format(
@@ -293,7 +290,7 @@ class EnumType(BaseType):
 
     def __init__(self, name='', items=None):
         self.type = TYPES.ENUM.value
-        self.name = 'enum ' + name
+        self.name = f'enum {name}'
         self.items = items if items is not None else []
 
     @property
@@ -360,30 +357,18 @@ def parse_type_to_type_for_json(str, types):
     json representation.
     """
     if type(str) is Struct:
-        # struct may be nested in struct/union
-        t = parse_struct_to_type_for_json(str, types)
-        return t
-
+        return parse_struct_to_type_for_json(str, types)
     if type(str) is Union:
-        # union may be nested in struct/union
-        t = parse_union_to_type_for_json(str, types)
-        return t
-
+        return parse_union_to_type_for_json(str, types)
     if type(str) is Enum:
-        # enum may be nested in struct/union
-        t = parse_enum_to_type_for_json(str, types)
-        return t
-
+        return parse_enum_to_type_for_json(str, types)
     if str == 'void':
         return VoidType()
 
     if str.endswith(')'):
-        t = parse_func_as_param_to_type_for_json(str, types)
-        return t
+        return parse_func_as_param_to_type_for_json(str, types)
     elif str.endswith(']'):
-        t = parse_array_type(str, types)
-        return t
-
+        return parse_array_type(str, types)
     if not str.strip():
         return TypedefedType('')
 
@@ -409,7 +394,7 @@ def parse_type_to_type_for_json(str, types):
             t = EnumType(str_list[1])
         else:
             t = get_primitive_type_or_typedef(str_list)
-            for p in range(str.count('*')):
+            for _ in range(str.count('*')):
                 t = PointerType(t)
 
     return t
@@ -417,11 +402,9 @@ def parse_type_to_type_for_json(str, types):
 
 def type_qualifier_in_type_list(type_list):
     """Returns the type qualifier in str list or None if not found."""
-    for item in reversed(type_list):
-        if item in QUALIFIER_TYPES:
-            return item
-
-    return None
+    return next(
+        (item for item in reversed(type_list) if item in QUALIFIER_TYPES), None
+    )
 
 
 def get_primitive_type_or_typedef(splitted_type):
@@ -443,9 +426,8 @@ def get_primitive_type_or_typedef(splitted_type):
 
 def parse_primitive_type(type_name):
     """Searches bit width in types, where we are sure that it's fixed."""
-    bitWidth = re.search(r'^(?:__)?u?int(8|16|32|64)(?:_t)?$', type_name)
-    if bitWidth:
-        return PrimitiveType(type_name, int(bitWidth.group(1)))
+    if bitWidth := re.search(r'^(?:__)?u?int(8|16|32|64)(?:_t)?$', type_name):
+        return PrimitiveType(type_name, int(bitWidth[1]))
     return PrimitiveType(type_name)
 
 
@@ -514,7 +496,7 @@ def parse_composite_type_to_json_type(comp_type, types, json_type=StructType):
             sub_t = json_type(comp_type.name_text, comp_type.members_list)
         else:  # not best solution for unique typedef union { }x;
             unique_name = re.sub(r'\s*\*\s*|, ', '_', comp_type.type_name_text)
-            sub_t = json_type('_TYPEDEF_' + unique_name, comp_type.members_list)
+            sub_t = json_type(f'_TYPEDEF_{unique_name}', comp_type.members_list)
         types[sub_t.type_hash] = sub_t
         t = parse_typedefs_to_json_type(comp_type.type_name_text, sub_t, types)
 
@@ -523,7 +505,7 @@ def parse_composite_type_to_json_type(comp_type, types, json_type=StructType):
 
 def parse_composite_type_members_to_json_type(comp_type, types):
     for attr in comp_type.members_list:
-        if isinstance(attr.type, CompositeType) or isinstance(attr.type, Enum):
+        if isinstance(attr.type, (CompositeType, Enum)):
             check_name_of_nested_composite_type(attr.type, attr.name, comp_type)
         t = parse_type_to_type_for_json(attr.type, types)
         if t.type_hash not in types:
@@ -541,7 +523,7 @@ def check_name_of_nested_composite_type(type, param_name, parent):
         else:
             parent_name = parent.type_name_text
             parent_name = re.sub(r'\s*\*\s*|, ', '_', parent_name)
-        type.name = '_LOCAL_' + parent_name + '_' + param_name
+        type.name = f'_LOCAL_{parent_name}_{param_name}'
 
 
 def parse_typedefs_to_json_type(typedefs, json_type, types):
@@ -563,7 +545,7 @@ def parse_typedefs_to_json_type(typedefs, json_type, types):
 
 def parse_func_as_param_to_type_for_json(str, types):
     """Parses function or pointer to function used as parameter/member."""
-    ret_type = parse_type_to_type_for_json(str[0: str.find('(')].strip(), types)
+    ret_type = parse_type_to_type_for_json(str[:str.find('(')].strip(), types)
     if ret_type.type_hash not in types:
         types[ret_type.type_hash] = ret_type
 
@@ -575,8 +557,8 @@ def parse_func_as_param_to_type_for_json(str, types):
     call_conv_and_params = re.search(r'^\(\s*(\w*\s*?\*?)\s*\)(\(.*\))', func_str)
     call_conv = None
     if call_conv_and_params:
-        func_str = call_conv_and_params.group(2)
-        call_conv = call_conv_and_params.group(1)
+        func_str = call_conv_and_params[2]
+        call_conv = call_conv_and_params[1]
         if call_conv.endswith('*'):
             is_pointer = True
             call_conv = call_conv[:-1].strip()
@@ -593,19 +575,18 @@ def parse_func_as_param_to_type_for_json(str, types):
 
     func_type = FunctionType(ret_type, params, is_vararg, call_conv)
 
-    if is_pointer:
-        if func_type.type_hash not in types:
-            types[func_type.type_hash] = func_type
-        return PointerType(func_type)
-    else:
+    if not is_pointer:
         return func_type
+    if func_type.type_hash not in types:
+        types[func_type.type_hash] = func_type
+    return PointerType(func_type)
 
 
 def parse_enum_to_type_for_json(enum, types):
     if enum.name:
         enum_t = EnumType(enum.name, enum.items_list)
     elif enum.type_name:
-        enum_t = EnumType('_TYPEDEF_' + enum.type_name, enum.items_list)
+        enum_t = EnumType(f'_TYPEDEF_{enum.type_name}', enum.items_list)
     else:
         enum_t = EnumType('', enum.items_list)
 

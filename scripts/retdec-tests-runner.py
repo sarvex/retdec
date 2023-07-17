@@ -63,10 +63,11 @@ def unit_tests_in_dir(path):
     tests = []
 
     for dirpath, _, filenames in os.walk(path):
-        for f in filenames:
-            if f.startswith('retdec-tests-') and not f.endswith('.py'):
-                tests.append(os.path.abspath(os.path.join(dirpath, f)))
-
+        tests.extend(
+            os.path.abspath(os.path.join(dirpath, f))
+            for f in filenames
+            if f.startswith('retdec-tests-') and not f.endswith('.py')
+        )
     tests.sort()
     return tests
 
@@ -115,19 +116,16 @@ def run_unit_tests_in_dir(path, verbose=False):
             print_colored('FAILED (return code %d)\n' % return_code, colorama.Fore.RED)
         tests_run = True
 
-    if tests_failed or not tests_run:
-        return 1
-    else:
-        return 0
+    return 1 if tests_failed or not tests_run else 0
 
 
 def main():
     verbose = len(sys.argv) > 1 and sys.argv[1] in ['-v', '--verbose']
 
     if not os.path.isdir(UNIT_TESTS_DIR):
-        utils.print_error_and_die('error: no unit tests found in %s' % UNIT_TESTS_DIR)
+        utils.print_error_and_die(f'error: no unit tests found in {UNIT_TESTS_DIR}')
 
-    print('Running all unit tests in %s...' % UNIT_TESTS_DIR)
+    print(f'Running all unit tests in {UNIT_TESTS_DIR}...')
     sys.exit(run_unit_tests_in_dir(UNIT_TESTS_DIR, verbose))
 
 

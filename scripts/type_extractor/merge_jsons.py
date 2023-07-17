@@ -24,13 +24,13 @@ def main(args):
 
     for path in args.path:
         for json_file in get_files_with_suffix_from_path(path, '.json'):
-            logging.info('Merging json file {}'.format(json_file))
+            logging.info(f'Merging json file {json_file}')
             merge_json_file(merged_types, merged_functions, json_file)
 
     if not args.keep_unused_types:
         merged_types = remove_unused_json_types(merged_functions, merged_types)
 
-    logging.info('Writing output to: {}'.format(args.output))
+    logging.info(f'Writing output to: {args.output}')
     with open(args.output, 'w') as output_file:
         print_types_functions_json(
             output_file, merged_types, merged_functions, args.json_indent)

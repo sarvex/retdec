@@ -59,7 +59,7 @@ class Param:
         rep = '{}({!r} {!r})'.format(
             self.__class__.__name__, self.type, self.name)
         if hasattr(self, 'annotations'):
-            rep = rep + ' ' + str(self.annotations)
+            rep = f'{rep} {str(self.annotations)}'
         return rep
 
     def repr_json(self):
@@ -74,7 +74,7 @@ class Param:
                 self.type = re.sub(r'\b%s\b' % annot, '', self.type, 1).strip()
         if found_annots:
             self.annotations = ' '.join(found_annots)
-            if self.annotations == 'IN OUT' or self.annotations == 'OUT IN':
+            if self.annotations in {'IN OUT', 'OUT IN'}:
                 self.annotations = '_Inout_'
 
     def parse_arrays(self):
@@ -83,14 +83,13 @@ class Param:
         In function 'parse_func_parameters' they are part of param name
         """
         array = re.search(r'\[.*\]', self.name)
-        self.type = self.type + ' ' + array.group(0)
+        self.type = f'{self.type} {array[0]}'
         self.name = re.sub(r'\[.*\]', '', self.name)
 
     def parse_param_size(self):
         """Gets size of parameter in bit fields in structs."""
-        size = re.search(r'\d+$', self.type)
-        if size:
-            self.size = size.group(0)
+        if size := re.search(r'\d+$', self.type):
+            self.size = size[0]
         self.type = self.type[:self.type_text.rfind(':')].strip()
 
     def parse_multiple_variables(self, members_list):
@@ -102,10 +101,9 @@ class Param:
         """
         vars_type = re.search(r'([^,]+)\s\w+,', self.type_text)
         if vars_type is not None:
-            vars_type = vars_type.group(1).strip()
+            vars_type = vars_type[1].strip()
             self.type += ','
-            vars_names = [v[:-1] for v in self.type_text.split() if ',' in v]
-            if vars_names:
+            if vars_names := [v[:-1] for v in self.type_text.split() if ',' in v]:
                 self.type = vars_type
                 self.name = vars_names[0]
                 for var in vars_names[1:]:
@@ -144,7 +142,7 @@ def parse_one_param(param):
     elif param.endswith(']'):
         p_type, p_name = split_param_to_type_and_name(param[:param.find('[')])
         one_param.name = p_name
-        one_param.type = p_type + ' ' + param[param.find('['):]
+        one_param.type = f'{p_type} ' + param[param.find('['):]
     else:
         p_type, p_name = split_param_to_type_and_name(param)
         one_param.name = p_name
@@ -183,7 +181,7 @@ def split_params(s):
     parts = []
     bracket_level = 0
     current = []
-    for c in (s + ','):
+    for c in f'{s},':
         if c == ',' and bracket_level == 0:
             parts.append(''.join(current).strip())
             current = []
@@ -200,26 +198,22 @@ def parse_function_type(func_type):
     """Splits function type (function or pointer to function) declaration
     to type and name and returns it as Param object.
     """
-    # T (*f)(...)
-    ret_type_and_name = re.search(r'^[\w\s*]+\(\*\s*(\w*)\s*\)\(', func_type)
-    if ret_type_and_name:
-        fname = ret_type_and_name.group(1)
+    if ret_type_and_name := re.search(
+        r'^[\w\s*]+\(\*\s*(\w*)\s*\)\(', func_type
+    ):
+        fname = ret_type_and_name[1]
         func_type = re.sub(r'^([\w\s*]+\(\*)\s*%s\s*(?=\)\()' % fname, r'\1', func_type, 1)
         return Param(fname, func_type)
 
-    # T (call_convention *f)(...)
-    # T (call_convention f)(...)
-    # T (f)(...)
-    ret_type_and_name = re.search(r'^[\w\s*]+\([\s\w]*?\*?\s*(\w*)\s*\)\(', func_type)
-    if ret_type_and_name:
-        fname = ret_type_and_name.group(1)
+    if ret_type_and_name := re.search(
+        r'^[\w\s*]+\([\s\w]*?\*?\s*(\w*)\s*\)\(', func_type
+    ):
+        fname = ret_type_and_name[1]
         func_type = re.sub(r'^([\w\s*]+\([\w\s]*\*?)\s*%s\s*(?=\)\()' % fname, r'\1', func_type, 1)
         return Param(fname, func_type)
 
-    # T f(...)
-    ret_type_and_name = re.search(r'^[\w\s*]+\s(\w+)\s*\(', func_type)
-    if ret_type_and_name:
-        fname = ret_type_and_name.group(1)
+    if ret_type_and_name := re.search(r'^[\w\s*]+\s(\w+)\s*\(', func_type):
+        fname = ret_type_and_name[1]
         func_type = re.sub(r'^([\w\s*]+)\s%s\s*(?=\()' % fname, r'\1 ', func_type, 1)
         return Param(fname, func_type)
     return Param('', '')

@@ -88,17 +88,16 @@ def get_all_composite_types(text, to_get='struct'):
     found = re.search(type_re % (to_get, x), text)
     if found is None:
         return text, types_list
-    one_type = re.escape(found.group(0))
-    while one_type:
+    while one_type := re.escape(found[0]):
         while one_type.count('{') != one_type.count('}'):
             x = x+1
             found = re.search(type_re % (to_get, x), text)
             if found is None:
                 return text, types_list
             if x > 20:
-                one_type = re.escape(found.group(0))
+                one_type = re.escape(found[0])
                 break
-            one_type = re.escape(found.group(0))
+            one_type = re.escape(found[0])
         text = re.sub(one_type, ';', text, count=1)
         if '<' not in found.group(0) and '::' not in found.group(0):
             types_list.append(found.group(0))
@@ -106,7 +105,6 @@ def get_all_composite_types(text, to_get='struct'):
         found = re.search(type_re % (to_get, x), text)
         if found is None:
             return text, types_list
-        one_type = re.escape(found.group(0))
 
 
 def parse_struct(struct, hfile):
@@ -129,12 +127,12 @@ def parse_composite_type(type_str, hfile, parsed_type=Struct):
     )
     if names_and_members is None:
         return parsed_type('', '', [], hfile)
-    name = names_and_members.group(1).strip()
+    name = names_and_members[1].strip()
     if type_str.startswith('typedef'):
-        typedef_name = names_and_members.group(3).strip()
+        typedef_name = names_and_members[3].strip()
     else:
         typedef_name = ''
-    members_str = names_and_members.group(2)
+    members_str = names_and_members[2]
     members = split_members(members_str)
     parsed_members = []
     for m in members:
@@ -151,9 +149,8 @@ def edit_structured_param_type(one_param, members_list, hfile):
     Structs, unions and functions need additional parsing.
     """
     if '{' in one_param.type_text:
-        name = re.search(r'\}([\w\s\*,]+)$', one_param.type_text)
-        if name:
-            one_param.name = name.group(1).strip()
+        if name := re.search(r'\}([\w\s\*,]+)$', one_param.type_text):
+            one_param.name = name[1].strip()
         type_text = re.sub(r'\}[\w\s*,]*$', '};', one_param.type_text)
         if one_param.type_text.startswith('struct'):
             s = parse_struct(type_text, hfile)
@@ -176,7 +173,7 @@ def edit_structured_param_type(one_param, members_list, hfile):
         param = one_param.type_text
         p_type, p_name = split_param_to_type_and_name(param[:param.find('[')])
         one_param.name = p_name
-        one_param.type = p_type + ' ' + param[param.find('['):]
+        one_param.type = f'{p_type} ' + param[param.find('['):]
         return
     elif':' in one_param.type_text:
         one_param.parse_param_size()

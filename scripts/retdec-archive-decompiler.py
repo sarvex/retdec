@@ -112,7 +112,7 @@ class ArchiveDecompiler:
 
         if self.args.file:
             if not os.path.isfile(self.args.file):
-                utils.print_error('Input %s is not a valid file.' % self.args.file)
+                utils.print_error(f'Input {self.args.file} is not a valid file.')
                 return False
 
             self.library_path = self.args.file
@@ -137,7 +137,7 @@ class ArchiveDecompiler:
                     CmdRunner.run_cmd([EXTRACT, '--objects', self.library_path])
                 return 1
 
-            self.tmp_archive = self.library_path + '.a'
+            self.tmp_archive = f'{self.library_path}.a'
             CmdRunner.run_cmd([EXTRACT, '--best', '--out', self.tmp_archive, self.library_path])
             self.library_path = self.tmp_archive
 
@@ -169,7 +169,7 @@ class ArchiveDecompiler:
             return 0
 
         # Run the decompilation over all the found files.
-        print('Running `%s' % DECOMPILER, end='')
+        print(f'Running `{DECOMPILER}', end='')
 
         if self.decompiler_args:
             print(' '.join(self.decompiler_args), end='')
@@ -182,14 +182,15 @@ class ArchiveDecompiler:
             print('%d/%d\t\t' % (file_index, self.file_count))
 
             # We have to use indexes instead of names because archives can contain multiple files with same name.
-            log_file = self.library_path + '.file_' + str(file_index) + '.log.verbose'
+            log_file = f'{self.library_path}.file_{str(file_index)}.log.verbose'
 
             # Do not escape!
             arg_list = [
                 sys.executable,
                 DECOMPILER,
-                '--ar-index=' + str(i),
-                '-o', self.library_path + '.file_' + str(file_index) + '.c',
+                f'--ar-index={str(i)}',
+                '-o',
+                f'{self.library_path}.file_{str(file_index)}.c',
                 self.library_path,
             ]
             if self.decompiler_args:

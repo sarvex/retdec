@@ -19,7 +19,9 @@ import threading
 
 
 def print_help():
-    print('Usage: %s yarac-path install-path yara-patterns-path compile' % sys.argv[0])
+    print(
+        f'Usage: {sys.argv[0]} yarac-path install-path yara-patterns-path compile'
+    )
 
 
 def get_arguments():
@@ -86,9 +88,10 @@ def compile_yara_files(yarac, install_dir):
     """
     inputs = []
     for root, dirnames, filenames in os.walk(install_dir):
-        for filename in fnmatch.filter(filenames, '*.yara'):
-            inputs.append(os.path.join(root, filename))
-
+        inputs.extend(
+            os.path.join(root, filename)
+            for filename in fnmatch.filter(filenames, '*.yara')
+        )
     if not inputs:
         return
 

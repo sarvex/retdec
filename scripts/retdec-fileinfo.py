@@ -60,10 +60,7 @@ def get_input_file(unknownargs):
     simplification and may not work in all cases. A proper solution would
     need to parse fileinfo parameters, which would be complex.
     """
-    for arg in unknownargs:
-        if not arg.startswith('-'):
-            return arg
-    return None
+    return next((arg for arg in unknownargs if not arg.startswith('-')), None)
 
 
 def main():

@@ -23,18 +23,10 @@ def typedef_loops_with_already_inserted_typedefs(new_type, merged_types):
 
 def choose_one_type(existing_type, new_type, merged):
     """Chooses one representation of data type when they are duplicit."""
-    if existing_type['type'] == TYPES.STRUCT.value:    # they should be of the same type
-        if not existing_type['members']:   # we want struct with members
-            return new_type                # not the one used as e.g. func parameter
-        else:
-            return existing_type
-
-    if existing_type['type'] == TYPES.UNION.value:    # same as structures
-        if existing_type['members'] == []:
-            return new_type
-        else:
-            return existing_type
-
+    if existing_type['type'] == TYPES.STRUCT.value:# they should be of the same type
+        return new_type if not existing_type['members'] else existing_type
+    if existing_type['type'] == TYPES.UNION.value:# same as structures
+        return new_type if existing_type['members'] == [] else existing_type
     if (existing_type['type'] == TYPES.TYPEDEF.value and
             new_type['type'] == TYPES.TYPEDEF.value):
         if existing_type['typedefed_type'] == 'unknown':

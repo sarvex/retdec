@@ -79,7 +79,7 @@ class SigFromLib:
     def _check_arguments(self):
         for f in self.args.input:
             if not os.path.isfile(f):
-                self.print_error_and_cleanup('input %s is not a valid file' % f)
+                self.print_error_and_cleanup(f'input {f} is not a valid file')
                 return False
 
         dir_name = os.path.dirname(os.path.abspath(self.args.output))
@@ -102,14 +102,14 @@ class SigFromLib:
         for lib_path in self.args.input:
             # Check for invalid archives.
             if not utils.is_valid_archive(lib_path):
-                print('ignoring file %s - not valid archive' % lib_path)
+                print(f'ignoring file {lib_path} - not valid archive')
                 continue
 
             # Get library name for .pat file.
             lib_name = os.path.splitext(os.path.basename(lib_path))[0]
 
             # Create sub-directory for object files.
-            object_dir = os.path.join(self.tmp_dir_path, lib_name) + '-objects'
+            object_dir = f'{os.path.join(self.tmp_dir_path, lib_name)}-objects'
             object_dirs = [object_dir]
             os.makedirs(object_dir, exist_ok=True)
 
@@ -126,7 +126,7 @@ class SigFromLib:
                         objects.append(fname)
 
             # Extract patterns from library.
-            pattern_file = os.path.join(self.tmp_dir_path, lib_name) + '.pat'
+            pattern_file = f'{os.path.join(self.tmp_dir_path, lib_name)}.pat'
             pattern_files.append(pattern_file)
             with open(self.object_list_path, 'w') as object_list:
                 for item in objects:
@@ -134,12 +134,13 @@ class SigFromLib:
             _, result, _ = CmdRunner.run_cmd([BIN2PAT, '-o', pattern_file, '-l', self.object_list_path], discard_stdout=True, discard_stderr=True)
 
             if result != 0:
-                self.print_error_and_cleanup('utility bin2pat failed when processing %s' % lib_path)
+                self.print_error_and_cleanup(
+                    f'utility bin2pat failed when processing {lib_path}'
+                )
                 return 1
 
-            # Remove extracted objects continuously.
-            if not self.args.no_cleanup:
-                if os.path.exists(object_dir):
+            if os.path.exists(object_dir):
+                if not self.args.no_cleanup:
                     shutil.rmtree(object_dir)
 
         # Skip second step - only .pat files will be created.
@@ -153,7 +154,7 @@ class SigFromLib:
         # Create final .yara file from .pat files.
         pat2yara_args = [PAT2YARA] + pattern_files + ['--min-pure', str(self.args.min_pure), '-o', self.args.output]
         if self.args.logfile:
-            pat2yara_args.extend(['-l', self.args.output + '.log'])
+            pat2yara_args.extend(['-l', f'{self.args.output}.log'])
         if self.ignore_nop:
             pat2yara_args.extend([self.ignore_nop, str(self.args.ignore_nops)])
 

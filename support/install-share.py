@@ -16,12 +16,11 @@ def cleanup(support_dir):
 
 
 def get_args(argv):
-    if len(argv) != 5:
-        print('ERROR: Unexpected number of arguments.')
-        print('       Expecting tuple: (install path, URL, SHA256, version).')
-        sys.exit(1)
-    else:
+    if len(argv) == 5:
         return (argv[1], argv[2], argv[3], argv[4])
+    print('ERROR: Unexpected number of arguments.')
+    print('       Expecting tuple: (install path, URL, SHA256, version).')
+    sys.exit(1)
 
 
 def main():
@@ -37,7 +36,7 @@ def main():
                 version_from_file = version_file.read().split('\n')[0]
 
             if version == version_from_file:
-                print('-- Up-to-date: %s (version is OK)' % support_dir)
+                print(f'-- Up-to-date: {support_dir} (version is OK)')
                 sys.exit(0)
             else:
                 print('version is not as expected -> replace with the expected version')

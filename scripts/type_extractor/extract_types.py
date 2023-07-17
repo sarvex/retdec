@@ -37,7 +37,7 @@ def get_output_file(header, path, out_format, dir_out):
     else:
         header_rel_path = os.path.relpath(header, path)
         f_name = re.sub(re.escape(os.path.sep), '_', header_rel_path).strip('_')
-    f_name = re.sub(r'\.(h|H)$', '.' + out_format, f_name)
+    f_name = re.sub(r'\.(h|H)$', f'.{out_format}', f_name)
 
     return os.path.join(dir_out, f_name)
 
@@ -48,7 +48,7 @@ def parse_header(header_file, path, output_handler, output_dir, output_format, i
 
     Path to header set to functions is relative path from script's input path.
     """
-    logging.info('Reading file: {}'.format(header_file))
+    logging.info(f'Reading file: {header_file}')
     content = read_text_file(header_file)
     if os.path.isfile(path):
         relative_path = os.path.basename(path)
@@ -69,10 +69,7 @@ def main(args):
     os.makedirs(args.output, exist_ok=True)
     dir_out = os.path.abspath(args.output)
 
-    output_handler = getattr(
-        type_extractor.io,
-        'print_types_info_{}'.format(args.format)
-    )
+    output_handler = getattr(type_extractor.io, f'print_types_info_{args.format}')
 
     indent = args.json_indent
 

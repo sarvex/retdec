@@ -18,10 +18,7 @@ def substitute_json_keys(content, new_keys):
 
 def generate_new_keys(old_keys):
     """Returns dictionary where key is old json key and value is the new key."""
-    new_keys = {}
-    for new, old in enumerate(sorted(old_keys), 1):
-        new_keys[old] = str(new)  # key in JSON object is always string
-    return new_keys
+    return {old: str(new) for new, old in enumerate(sorted(old_keys), 1)}
 
 
 def substitute_keys_in_functions(functions, new_keys):
@@ -57,8 +54,7 @@ def substitute_type_keys(type, new_keys):
         substitute_pointer_keys(type, new_keys)
     elif type_of_type == TYPES.QUALIFIER.value:
         substitute_qualifier_keys(type, new_keys)
-    elif (type_of_type == TYPES.STRUCT.value or
-            type_of_type == TYPES.UNION.value):
+    elif type_of_type in [TYPES.STRUCT.value, TYPES.UNION.value]:
         substitute_composite_type_members_keys(type, new_keys)
     elif type_of_type == TYPES.TYPEDEF.value:
         substitute_typedefed_type_keys(type, new_keys)

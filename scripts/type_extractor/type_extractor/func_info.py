@@ -79,8 +79,7 @@ class FuncInfo:
         for p in self.params:
             if p.name.startswith('_'):
                 p.name = p.name.strip('_')
-                self.decl = re.sub(r'_+{}\b'.format(re.escape(p.name)),
-                                   p.name, self.decl, 1)
+                self.decl = re.sub(f'_+{re.escape(p.name)}\b', p.name, self.decl, 1)
 
 
 def get_declarations(text):
@@ -92,9 +91,9 @@ def parse_func_declaration(decl):
     """Gets return type and parameters from declaration."""
     decl = edit_decl(decl)
     m = re.search(r'([\w\s\*]+)\s+(\w+)\s*\(', decl)
-    name = m.group(2)
-    ret, call_convention = split_ret_type_and_call_convention(m.group(1))
-    params_str = re.search(r'\((.*)\)', decl).group(1)
+    name = m[2]
+    ret, call_convention = split_ret_type_and_call_convention(m[1])
+    params_str = re.search(r'\((.*)\)', decl)[1]
     return name, ret.strip(), params_str, call_convention
 
 

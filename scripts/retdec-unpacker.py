@@ -103,12 +103,14 @@ class Unpacker:
             return False
 
         if not os.access(self.args.file, os.R_OK):
-            utils.print_error('The input file %s does not exist or is not readable' % self.args.file)
+            utils.print_error(
+                f'The input file {self.args.file} does not exist or is not readable'
+            )
             return False
 
         # Conditional initialization.
         if not self.args.output:
-            self.output = self.args.file + '-unpacked'
+            self.output = f'{self.args.file}-unpacked'
         else:
             self.output = self.args.output
 
@@ -116,8 +118,9 @@ class Unpacker:
             try:
                 int(self.args.max_memory)
             except ValueError:
-                utils.print_error('Invalid value for --max-memory: %s (expected an integer)'
-                                  % self.args.max_memory)
+                utils.print_error(
+                    f'Invalid value for --max-memory: {self.args.max_memory} (expected an integer)'
+                )
                 return False
 
         # Convert to absolute paths.
@@ -178,15 +181,18 @@ class Unpacker:
 
         res_rc = self.UNPACKER_EXIT_CODE_OTHER
         res_out = ''
-        tmp_output = self.output + '.tmp'
+        tmp_output = f'{self.output}.tmp'
 
         while True:
             unpacker_out, return_code = self._unpack(tmp_output)
 
             res_out += unpacker_out + '\n'
 
-            if return_code == self.RET_UNPACK_OK or return_code == self.RET_UNPACKER_NOTHING_TO_DO_OTHERS_OK \
-                    or return_code == self.RET_UNPACKER_FAILED_OTHERS_OK:
+            if return_code in [
+                self.RET_UNPACK_OK,
+                self.RET_UNPACKER_NOTHING_TO_DO_OTHERS_OK,
+                self.RET_UNPACKER_FAILED_OTHERS_OK,
+            ]:
                 res_rc = return_code
 
                 shutil.move(tmp_output, self.output)

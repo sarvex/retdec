@@ -69,10 +69,7 @@ def is_supported(text):
 
     # Files with assembly code in Windows SDK are not supported. They start
     # with the following comment:
-    if re.search(r'; *Copyright *\(c\) *Microsoft *Corporation\.', text):
-        return False
-
-    return True
+    return not re.search(r'; *Copyright *\(c\) *Microsoft *Corporation\.', text)
 
 
 def inline_func_to_decl(text):
@@ -143,20 +140,18 @@ def filter_annotations_with_brackets(text):
     found = re.search(r'\b_{1,2}[A-Z]\w*_{1,2}\b\s*\(.*?\)(.*?\)){%d}' % x, text, flags=re.S)
     if found is None:
         return text
-    annot = re.escape(found.group(0))
-    while annot:
+    while annot := re.escape(found[0]):
         while annot.count('(') != annot.count(')'):
             x = x + 1
             found = re.search(r'\b_{1,2}[A-Z]\w*_\b\s*\(.*?\)(.*?\)){%d}' % x, text, flags=re.S)
             if found is None:
                 return text
-            annot = re.escape(found.group(0))
+            annot = re.escape(found[0])
         text = re.sub(annot, '', text, count=1)
         x = 0
         found = re.search(r'\b_{1,2}[A-Z]\w*_\b\s*\(.*?\)(.*?\)){%d}' % x, text, flags=re.S)
         if found is None:
             return text
-        annot = re.escape(found.group(0))
 
 
 def filter_specific_keywords(text):

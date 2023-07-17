@@ -58,35 +58,39 @@ def JSONHandler(obj):
     if hasattr(obj, 'repr_json'):
         return obj.repr_json()
 
-    raise TypeError('Object of type {} with value of {} is not JSON '
-                    'serializable'.format(type(obj), repr(obj)))
+    raise TypeError(
+        f'Object of type {type(obj)} with value of {repr(obj)} is not JSON serializable'
+    )
 
 
 def print_types_info_txt(f_out, functions, typedefs, structs, unions, enums, ident=4):
     """Text output for types and functions."""
     for sname, sinfo in structs.items():
         f_out.write('Struct' + '\n')
-        f_out.write('Name: ' + sinfo.name_text + '\n')
+        f_out.write(f'Name: {sinfo.name_text}' + '\n')
         if sinfo.type_name_text:
-            f_out.write('Typedef name: ' + sinfo.type_name_text + '\n')
+            f_out.write(f'Typedef name: {sinfo.type_name_text}' + '\n')
         f_out.write('Data:' + '\n')
         for member in sinfo.members_list:
-            f_out.write('Name: {}\ttype: {}'.format(member.name_text,
-                        member.type_text))
+            f_out.write(f'Name: {member.name_text}\ttype: {member.type_text}')
             if hasattr(member, 'size'):
-                f_out.write(' size: {}\n'.format(member.size))
+                f_out.write(f' size: {member.size}\n')
             else:
                 f_out.write('\n')
         f_out.write('\n')
 
     for fname, f_info in functions.items():
         f_out.write(f_info.decl + '\n')
-        f_out.write('Name: ' + f_info.name + '\n')
-        f_out.write('Return type: ' + f_info.ret_type_text + '\n')
+        f_out.write(f'Name: {f_info.name}' + '\n')
+        f_out.write(f'Return type: {f_info.ret_type_text}' + '\n')
         f_out.write('Parameters:' + '\n')
         for p in f_info.params:
-            f_out.write('Name: {}\t\ttype: {} {}'.format(p.name_text,
-                        p.type_text, p.annotations_text) + '\n')
+            f_out.write(
+                (
+                    f'Name: {p.name_text}\t\ttype: {p.type_text} {p.annotations_text}'
+                    + '\n'
+                )
+            )
         if f_info.vararg:
             f_out.write('Varargs: True' + '\n')
         f_out.write('\n')
@@ -95,27 +99,25 @@ def print_types_info_txt(f_out, functions, typedefs, structs, unions, enums, ide
 def print_types_info_lti(f_out, functions, types, structs, unions, enums, indent=0):
     """Lti output for types and functions."""
     for sname, sinfo in sorted(structs.items()):
-        lti = '%struct.' + sname + ' = type { '
+        lti = f'%struct.{sname}' + ' = type { '
         lti = lti + ', '.join([str_types_sub(members.type_text, members.name_text)
                               for members in sinfo.members_list])
         lti = lti + ' }\n'
         f_out.write(lti)
 
     for fname, f_info in sorted(functions.items()):
-        lti_1 = f_info.name_text+' '+str_types_sub(f_info.ret_type_text, '')
-        lti_2 = ' ' + str(len(f_info.params_list)) + ' '
+        lti_1 = f'{f_info.name_text} ' + str_types_sub(f_info.ret_type_text, '')
+        lti_2 = f' {len(f_info.params_list)} '
         lti_3 = ', '.join([str_types_sub(param.type_text, param.name_text)
                           for param in f_info.params_list])
-        lti_4 = ' # ' + f_info.decl
+        lti_4 = f' # {f_info.decl}'
         lti = lti_1 + lti_2 + lti_3 + lti_4
         f_out.write(lti + '\n')
 
 
 def types_sub(type_text):
     """Substitutes type for lti type."""
-    if type_text in LTI_TYPES.keys():
-        return LTI_TYPES[type_text]
-    return type_text
+    return LTI_TYPES[type_text] if type_text in LTI_TYPES.keys() else type_text
 
 
 def str_types_sub(type_text, name):
@@ -132,8 +134,8 @@ def array_sub(type_text):
     if num is None:
         return type_text
     type_text = re.sub(r'\s*\[.*\]', '', type_text)
-    num = num.group(1)
-    return '[' + num + ' x ' + str_types_sub_no_array(type_text) + ']'
+    num = num[1]
+    return f'[{num} x {str_types_sub_no_array(type_text)}]'
 
 
 def str_types_sub_no_array(type_text):

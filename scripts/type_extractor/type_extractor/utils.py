@@ -9,8 +9,7 @@ def get_files_with_suffix_from_all_paths(paths, suffix=''):
     Otherwise recursively walks path and returns all files with given suffix.
     """
     for path in paths:
-        for f in get_files_with_suffix_from_path(path, suffix):
-            yield f
+        yield from get_files_with_suffix_from_path(path, suffix)
 
 
 def get_files_with_suffix_from_path(path, suffix=''):

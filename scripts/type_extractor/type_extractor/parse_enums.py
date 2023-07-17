@@ -91,15 +91,15 @@ def parse_enum(enum_str, hfile):
     )
     if not found:
         return Enum()
-    name = found.group(2)
-    enum_type_name = found.group(4).strip()
-    if not found.group(1):
+    name = found[2]
+    enum_type_name = found[4].strip()
+    if not found[1]:
         enum_type_name = ''
 
-    enum_item = found.group(3).strip()
+    enum_item = found[3].strip()
     if not enum_item:
         return Enum(name, enum_type_name, [], hfile)
-    if ',' == enum_item[-1]:
+    if enum_item[-1] == ',':
         enum_item = enum_item[:-1]
     enum_item = enum_item.split(', ')
 
@@ -111,10 +111,10 @@ def parse_enum(enum_str, hfile):
                 r'=\s*([\+\-]?(?:0x[a-fA-F0-9]+|\d+))', item)
             item = re.sub(r'\s*=.*', '', item)
             if explicit_value is not None:
-                if 'x' in explicit_value.group(1):
-                    value = int(explicit_value.group(1), 16)
+                if 'x' in explicit_value[1]:
+                    value = int(explicit_value[1], 16)
                 else:
-                    value = int(explicit_value.group(1), 10)
+                    value = int(explicit_value[1], 10)
                 items_list.append(EnumItem(item.strip(), value))
             else:
                 items_list.append(EnumItem(item.strip(), 'x'))

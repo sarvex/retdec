@@ -33,8 +33,7 @@ def add_type_to_new_types(type_key, old_types, new_types):
         add_pointer_to_new_types(type, old_types, new_types)
     elif type_of_type == TYPES.QUALIFIER.value:
         add_qualifier_to_new_types(type, old_types, new_types)
-    elif (type_of_type == TYPES.STRUCT.value or
-            type_of_type == TYPES.UNION.value):
+    elif type_of_type in [TYPES.STRUCT.value, TYPES.UNION.value]:
         add_composite_type_members_to_new_types(type, old_types, new_types)
     elif type_of_type == TYPES.TYPEDEF.value:
         add_typedef_to_new_types(type, old_types, new_types)
@@ -128,8 +127,7 @@ def substitute_qualifier_types_in_types(types, qualifier_types):
             substitute_qualifier_types_in_function_type(type, qualifier_types)
         elif type_of_type == TYPES.POINTER.value:
             substitute_qualifier_type_in_pointer(type, qualifier_types)
-        elif (type_of_type == TYPES.STRUCT.value or
-                type_of_type == TYPES.UNION.value):
+        elif type_of_type in [TYPES.STRUCT.value, TYPES.UNION.value]:
             substitute_qualifier_types_in_members(type, qualifier_types)
         elif type_of_type == TYPES.TYPEDEF.value:
             substitute_qualifier_type_in_typedef(type, qualifier_types)
