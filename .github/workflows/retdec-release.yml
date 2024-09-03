@@ -101,7 +101,7 @@ jobs:
 
       # Fetch artifacts from the build step.
       - name: Fetch Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           path: artifacts
 
